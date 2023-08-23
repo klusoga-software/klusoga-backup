@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/url"
 	"path"
+	"time"
 )
 
 type mssqlTarget struct {
@@ -28,7 +29,9 @@ func NewMssqlTarget(parameters MssqlParameters) Target {
 	}
 }
 
-func (m *mssqlTarget) Backup() error {
+func (m *mssqlTarget) Backup() ([]string, error) {
+	var paths []string
+
 	u := &url.URL{
 		Scheme: "sqlserver",
 		User:   url.UserPassword(m.parameters.Username, m.parameters.Password),
@@ -37,21 +40,24 @@ func (m *mssqlTarget) Backup() error {
 
 	db, err := sql.Open("sqlserver", u.String())
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if err := db.Ping(); err != nil {
-		return err
+		return nil, err
 	}
 
 	for _, d := range m.parameters.Databases {
-		p := path.Join(m.parameters.Path, d+".bak")
+		p := path.Join(m.parameters.Path, d+"-"+time.Now().Format(time.DateOnly)+".bak")
 		sqlbackup := fmt.Sprintf("BACKUP DATABASE [%s] TO DISK = '%s';", d, p)
 		_, err = db.Exec(sqlbackup)
 		if err != nil {
 			slog.Error(err.Error())
+			continue
 		}
+
+		paths = append(paths, p)
 	}
 
-	return nil
+	return paths, nil
 }

@@ -11,13 +11,14 @@ var rootCmd = &cobra.Command{
 }
 
 var (
-	Target    types.TargetType
-	Username  string
-	Password  string
-	Host      string
-	Port      int
-	Databases []string
-	Path      string
+	Target      types.TargetType
+	Username    string
+	Password    string
+	Host        string
+	Port        int
+	Databases   []string
+	Path        string
+	Destination string
 )
 
 func Execute() {
