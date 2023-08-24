@@ -19,6 +19,7 @@ var (
 	Databases   []string
 	Path        string
 	Destination string
+	Schedule    string
 )
 
 func Execute() {
