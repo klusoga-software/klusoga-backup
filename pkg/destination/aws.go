@@ -12,12 +12,17 @@ import (
 )
 
 type S3DestinationParams struct {
+	Name   string
 	Bucket string
 	Region string
 }
 
 type s3BucketDestination struct {
 	params S3DestinationParams
+}
+
+func (s *s3BucketDestination) String() string {
+	return fmt.Sprintf("Name: %s, Type: %s", s.params.Name, "aws")
 }
 
 func NewS3BucketDestination(params S3DestinationParams) Destination {
