@@ -57,5 +57,19 @@ func (s *s3BucketDestination) UploadFiles(fileList []string, prefix string) erro
 		file.Close()
 	}
 
+	if err := s.cleanupLocalBackup(fileList); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *s3BucketDestination) cleanupLocalBackup(fileList []string) error {
+	for _, f := range fileList {
+		if err := os.Remove(f); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
