@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"slices"
 )
 
 type Destination interface {
@@ -15,21 +16,9 @@ type Destination interface {
 	String() string
 }
 
-func getDestinationFile() (*types.DestinationFile, error) {
+func getDestinationFileData() (*types.DestinationFile, error) {
 	var destinationFile types.DestinationFile
-
-	destinationFilePath := os.Getenv("DESTINATION_FILE_PATH")
-	if destinationFilePath == "" {
-		homedir, err := os.UserHomeDir()
-		if err != nil {
-			return nil, err
-		}
-
-		destinationFilePath = path.Join(homedir, ".klusoga-backup", "destinations.yaml")
-		checkDestinationFilePath(destinationFilePath)
-	}
-
-	file, err := os.Open(destinationFilePath)
+	file, err := getDestinationFile()
 	if err != nil {
 		return nil, err
 	}
@@ -43,6 +32,26 @@ func getDestinationFile() (*types.DestinationFile, error) {
 	yaml.Unmarshal(data, &destinationFile)
 
 	return &destinationFile, nil
+}
+
+func getDestinationFile() (*os.File, error) {
+	destinationFilePath := os.Getenv("DESTINATION_FILE_PATH")
+	if destinationFilePath == "" {
+		homedir, err := os.UserHomeDir()
+		if err != nil {
+			return nil, err
+		}
+
+		destinationFilePath = path.Join(homedir, ".klusoga-backup", "destinations.yaml")
+		checkDestinationFilePath(destinationFilePath)
+	}
+
+	file, err := os.OpenFile(destinationFilePath, os.O_RDWR|os.O_CREATE, 0750)
+	if err != nil {
+		return nil, err
+	}
+
+	return file, nil
 }
 
 func checkDestinationFilePath(path string) {
@@ -61,7 +70,7 @@ func GetDestinationByName(name string) (Destination, error) {
 	var destination Destination
 	var dest types.Destination
 
-	destinationFile, err := getDestinationFile()
+	destinationFile, err := getDestinationFileData()
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +98,7 @@ func GetDestinationByName(name string) (Destination, error) {
 func ListDestinations() ([]Destination, error) {
 	var destinations []Destination
 
-	destinationFile, err := getDestinationFile()
+	destinationFile, err := getDestinationFileData()
 	if err != nil {
 		return nil, err
 	}
@@ -106,4 +115,55 @@ func ListDestinations() ([]Destination, error) {
 	}
 
 	return destinations, nil
+}
+
+func AddDestination(destination types.Destination) error {
+	destinationFile, err := getDestinationFileData()
+	if err != nil {
+		return err
+	}
+
+	destinationFile.Destinations = append(destinationFile.Destinations, destination)
+
+	file, err := getDestinationFile()
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	data, err := yaml.Marshal(destinationFile)
+	if err != nil {
+		return err
+	}
+
+	file.Write(data)
+	file.Close()
+
+	return nil
+}
+
+func DeleteDestination(name string) error {
+	destinationFile, err := getDestinationFileData()
+	if err != nil {
+		return err
+	}
+
+	destinationFile.Destinations = slices.DeleteFunc(destinationFile.Destinations, func(destination types.Destination) bool {
+		return destination.Name == name
+	})
+
+	file, err := getDestinationFile()
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	data, err := yaml.Marshal(destinationFile)
+	if err != nil {
+		return err
+	}
+
+	file.Write(data)
+	file.Close()
+	return nil
 }
