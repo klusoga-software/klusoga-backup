@@ -49,7 +49,7 @@ func (s *s3BucketDestination) UploadFiles(fileList []string) error {
 		}
 		slog.Info("Upload file", "file", filepath.Base(f))
 		_, err = s3Client.PutObject(context.TODO(), &s3.PutObjectInput{
-			Bucket: &s.params.Bucket,
+			Bucket: &prefix[0],
 			Key:    aws.String(fmt.Sprintf("%s/%s", prefix[1], filepath.Base(file.Name()))),
 			Body:   file,
 		})
