@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type S3DestinationParams struct {
@@ -31,13 +32,15 @@ func NewS3BucketDestination(params S3DestinationParams) Destination {
 	}
 }
 
-func (s *s3BucketDestination) UploadFiles(fileList []string, prefix string) error {
+func (s *s3BucketDestination) UploadFiles(fileList []string) error {
 	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(s.params.Region))
 	if err != nil {
 		return err
 	}
 
 	s3Client := s3.NewFromConfig(cfg)
+
+	prefix := strings.SplitN(s.params.Bucket, "/", 2)
 
 	for _, f := range fileList {
 		file, err := os.Open(f)
@@ -47,7 +50,7 @@ func (s *s3BucketDestination) UploadFiles(fileList []string, prefix string) erro
 		slog.Info("Upload file", "file", filepath.Base(f))
 		_, err = s3Client.PutObject(context.TODO(), &s3.PutObjectInput{
 			Bucket: &s.params.Bucket,
-			Key:    aws.String(fmt.Sprintf("%s/%s", prefix, filepath.Base(file.Name()))),
+			Key:    aws.String(fmt.Sprintf("%s/%s", prefix[1], filepath.Base(file.Name()))),
 			Body:   file,
 		})
 

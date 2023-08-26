@@ -71,7 +71,7 @@ var backupCmd = &cobra.Command{
 					return err
 				}
 
-				err = des.UploadFiles(files, "klusoga")
+				err = des.UploadFiles(files)
 				if err != nil {
 					return err
 				}
@@ -100,7 +100,7 @@ var backupCmd = &cobra.Command{
 						return
 					}
 
-					err = des.UploadFiles(files, "klusoga")
+					err = des.UploadFiles(files)
 					if err != nil {
 						slog.Error("Error while upload file", "error", err.Error())
 						return

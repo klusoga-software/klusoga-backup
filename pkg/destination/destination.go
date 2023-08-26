@@ -11,7 +11,7 @@ import (
 )
 
 type Destination interface {
-	UploadFiles(fileList []string, prefix string) error
+	UploadFiles(fileList []string) error
 	String() string
 }
 
