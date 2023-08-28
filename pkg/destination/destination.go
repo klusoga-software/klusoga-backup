@@ -18,7 +18,7 @@ type Destination interface {
 
 func getDestinationFileData() (*types.DestinationFile, error) {
 	var destinationFile types.DestinationFile
-	file, err := getDestinationFile()
+	file, err := getDestinationFile(true)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +34,7 @@ func getDestinationFileData() (*types.DestinationFile, error) {
 	return &destinationFile, nil
 }
 
-func getDestinationFile() (*os.File, error) {
+func getDestinationFile(readonly bool) (*os.File, error) {
 	destinationFilePath := os.Getenv("DESTINATION_FILE_PATH")
 	if destinationFilePath == "" {
 		homedir, err := os.UserHomeDir()
@@ -46,7 +46,12 @@ func getDestinationFile() (*os.File, error) {
 		checkDestinationFilePath(destinationFilePath)
 	}
 
-	file, err := os.OpenFile(destinationFilePath, os.O_RDWR|os.O_CREATE, 0750)
+	var fileFlags = os.O_RDWR | os.O_CREATE
+	if readonly {
+		fileFlags = os.O_RDONLY
+	}
+
+	file, err := os.OpenFile(destinationFilePath, fileFlags, 0750)
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +130,7 @@ func AddDestination(destination types.Destination) error {
 
 	destinationFile.Destinations = append(destinationFile.Destinations, destination)
 
-	file, err := getDestinationFile()
+	file, err := getDestinationFile(false)
 	if err != nil {
 		return err
 	}
@@ -152,7 +157,7 @@ func DeleteDestination(name string) error {
 		return destination.Name == name
 	})
 
-	file, err := getDestinationFile()
+	file, err := getDestinationFile(false)
 	if err != nil {
 		return err
 	}
