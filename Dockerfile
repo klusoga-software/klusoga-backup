@@ -1,3 +1,3 @@
 FROM alpine:3
-ENTRYPOINT ["/klusoga-backup"]
-COPY klusoga-backup /
+ENTRYPOINT ["/klusoga-backup-agent"]
+COPY klusoga-backup /klusoga-backup-agent
