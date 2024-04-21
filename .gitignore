@@ -24,3 +24,5 @@ go.work
 .idea/
 
 destinations.yaml
+
+.DS_Store
