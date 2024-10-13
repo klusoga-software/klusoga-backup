@@ -47,7 +47,6 @@ jobs:
   check:
     name: Build and analyze
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
     needs: version
     steps:
       - uses: actions/checkout@v4
@@ -56,6 +55,7 @@ jobs:
       - run: |
           echo "sonar.projectVersion=${{needs.version.outputs.semver}}" >> sonar-project.properties
       - name: SonarCloud Scan
+        if: github.ref == 'refs/heads/main'
         uses: SonarSource/sonarcloud-github-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
